@@ -1,0 +1,576 @@
+/*
+ * style.css — Torre de Hanoi
+ *
+ * Si estas cambiando colores aqui a las 2am, bienvenido al club.
+ * La membresia no tiene beneficios pero hay mucho cafe imaginario.
+ */
+
+/* ─────────────────────────────────────────
+   TOKENS GLOBALES
+   Centralizo todo aqui para no buscar hex
+   codes desperdigados por 400 lineas de CSS.
+   Aprendi esto despues de hacerlo mal 3 veces.
+   ───────────────────────────────────────── */
+:root {
+    --bg:     #f5f4f0;
+    --fg:     #1a1a1a;
+    --muted:  #9a9a8e;
+    --border: rgba(26, 26, 26, 0.12);
+
+    /* colores de discos — si agregas mas de 5 discos,
+       te deseo suerte y buena vista */
+    --disk-1: #c8b8a2;
+    --disk-2: #a8b8c8;
+    --disk-3: #b8c8a8;
+    --disk-4: #c8a8b8;
+    --disk-5: #d4c89e;
+}
+
+/* ─────────────────────────────────────────
+   RESET BASICO
+   El margin: 0 / padding: 0 de toda la vida.
+   Clasico. Intemporal. Como el bug que no
+   puedes reproducir en produccion.
+   ───────────────────────────────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-x: hidden; /* adios scroll horizontal, no eres bienvenido aqui */
+}
+
+/* ─────────────────────────────────────────
+   ANIMACION GLOBAL
+   Un solo keyframe reutilizable.
+   La eficiencia que tanto le prometi al PM.
+   ───────────────────────────────────────── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ══════════════════════════════════════════
+   PANTALLA DE INICIO (Splash)
+   La primera impresion importa.
+   Dicho eso, me tome 2 horas en los margenes.
+   ══════════════════════════════════════════ */
+
+#splash {
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+}
+
+/* etiqueta pequeña encima del titulo */
+.title-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+}
+
+h1 {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(2.2rem, 6vw, 4rem); /* responsive sin media queries, mira mama */
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 52px;
+}
+
+/* preview decorativo de 3 discos apilados */
+.disk-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 52px;
+}
+
+.preview-disk {
+    height: 10px;
+    border-radius: 2px;
+    opacity: 0.55;
+}
+.preview-disk:nth-child(1) { width: 50px;  background: var(--disk-1); }
+.preview-disk:nth-child(2) { width: 80px;  background: var(--disk-2); }
+.preview-disk:nth-child(3) { width: 110px; background: var(--disk-3); }
+
+/* selector de numero de discos */
+.disk-select-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 36px;
+}
+
+.disk-select-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.disk-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background: transparent;
+    border-radius: 50%;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* activo o hover: inversion total, como mis decisiones de vida */
+.disk-btn.active,
+.disk-btn:hover {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+}
+
+
+/* ══════════════════════════════════════════
+   BOTONES
+   Dos variantes: primario y fantasma.
+   Nombrarlos fue la decision mas dificil del dia.
+   ══════════════════════════════════════════ */
+
+.btn-primary {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    border: 1px solid var(--fg);
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    margin: 6px;
+}
+
+.btn-primary:hover {
+    background: var(--fg);
+    color: var(--bg);
+}
+
+.btn-ghost {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    margin: 6px;
+}
+
+.btn-ghost:hover {
+    border-color: var(--fg);
+    color: var(--fg);
+}
+
+
+/* ══════════════════════════════════════════
+   INSTRUCCIONES
+   Que nadie lee pero igual las escribi con amor.
+   ══════════════════════════════════════════ */
+
+#instructions {
+    display: none;
+    max-width: 500px;
+    animation: fadeIn 0.4s ease;
+}
+
+.instr-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+}
+
+/* cada regla es numero + texto, como una lista pero con clase */
+.rule {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 22px;
+    align-items: flex-start;
+}
+
+.rule-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-width: 20px;
+    padding-top: 2px;
+}
+
+.rule-text {
+    font-size: 0.95rem;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--fg);
+}
+
+.rule-text strong {
+    font-weight: 400;
+}
+
+.instr-divider {
+    width: 32px;
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+}
+
+
+/* ══════════════════════════════════════════
+   PANTALLA DE JUEGO
+   El corazon de todo. Donde la magia ocurre.
+   O donde el usuario se frustra. Depende del usuario.
+   ══════════════════════════════════════════ */
+
+#game {
+    display: none;
+    width: 100%;
+    max-width: 760px;
+    animation: fadeIn 0.4s ease;
+}
+
+/* barra superior: titulo a la izquierda, stats a la derecha */
+.game-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 48px;
+}
+
+.game-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.stats-row {
+    display: flex;
+    gap: 36px;
+}
+
+.stat-item {
+    text-align: right;
+}
+
+.stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: var(--fg);
+    line-height: 1;
+}
+
+
+/* ─────────────────────────────────────────
+   AREA DE TORRES
+   El verdadero canvas del puzzle.
+   height fija para que los discos no bailen
+   dependiendo de cuantos hay.
+   ───────────────────────────────────────── */
+
+.towers-area {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    position: relative;
+    height: 240px;
+}
+
+/* cada torre ocupa un tercio del espacio disponible */
+.tower-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.tower-wrap:hover .peg-label {
+    color: var(--fg);
+}
+
+/* la clavija vertical — 2px de ancho, como mi tolerancia a los bugs */
+.peg {
+    width: 2px;
+    background: var(--fg);
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 1px;
+    opacity: 0.25;
+    transition: opacity 0.2s;
+    height: 190px;
+}
+
+/* torre seleccionada: clavija mas visible */
+.tower-wrap.selected .peg {
+    opacity: 0.9;
+}
+
+/* linea de base horizontal */
+.base-line {
+    width: 100%;
+    height: 1px;
+    background: var(--fg);
+    opacity: 0.18;
+    position: absolute;
+    bottom: 24px;
+}
+
+/* etiqueta A / B / C */
+.peg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 6px;
+    transition: color 0.2s;
+}
+
+
+/* ─────────────────────────────────────────
+   STACK DE DISCOS
+   Apilados de abajo hacia arriba en el DOM.
+   Si cambias el flex-direction te arrepentiras.
+   ───────────────────────────────────────── */
+
+.disks-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: absolute;
+    bottom: 24px;
+    width: 100%;
+    gap: 3px;
+}
+
+/* disco generico */
+.disk {
+    height: 22px;
+    border-radius: 3px;
+    transition: transform 0.18s cubic-bezier(.4, 0, .2, 1), opacity 0.18s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* disco en estado "levantado" (seleccionado) */
+.disk.lifting {
+    transform: translateY(-14px);
+    opacity: 0.7;
+}
+
+/* tamaños de disco — del mas pequeño al mas grande */
+.disk.size-1 { width: 42px;  background: var(--disk-1); }
+.disk.size-2 { width: 68px;  background: var(--disk-2); }
+.disk.size-3 { width: 96px;  background: var(--disk-3); }
+.disk.size-4 { width: 122px; background: var(--disk-4); }
+.disk.size-5 { width: 148px; background: var(--disk-5); }
+
+
+/* ─────────────────────────────────────────
+   BARRA DE PISTA / MENSAJES
+   Aqui le digo al usuario que esta haciendo mal.
+   Con amabilidad. Por ahora.
+   ───────────────────────────────────────── */
+
+.hint-bar {
+    text-align: center;
+    margin-top: 32px;
+    min-height: 22px; /* evita que el layout brinque cuando el texto aparece */
+}
+
+.hint-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.hint-text.error {
+    color: #c0392b; /* rojo clasico de "te equivocaste, amigo" */
+}
+
+
+/* barra inferior: info de optimo + botones */
+.game-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 52px;
+}
+
+.optimal-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+}
+
+
+/* ══════════════════════════════════════════
+   OVERLAY DE VICTORIA
+   El usuario lo logro. Le merecemos un modal bonito.
+   O al menos uno que no asuste.
+   ══════════════════════════════════════════ */
+
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0; /* shorthand de top/right/bottom/left, por si no lo conocias */
+    background: rgba(245, 244, 240, 0.88);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.overlay.show {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+}
+
+.modal-box {
+    text-align: center;
+    max-width: 360px;
+    width: 100%;
+}
+
+.modal-symbol {
+    font-family: 'DM Mono', monospace;
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 24px;
+    color: var(--fg);
+    opacity: 0.4;
+}
+
+.modal-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 300;
+    margin-bottom: 12px;
+}
+
+.modal-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 300;
+    margin-bottom: 8px;
+}
+
+.modal-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 36px 0;
+    padding: 28px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+/* reutilizo stat-item del juego aqui tambien */
+.modal-stat-item .stat-label { text-align: center; }
+.modal-stat-item .stat-value { font-size: 2rem; }
+
+.efficiency {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    margin-bottom: 32px;
+}
+
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+   Porque alguien siempre abre esto en el telefono.
+   Y tienen razon. Deberia funcionar.
+   ══════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+    .towers-area { height: 200px; }
+
+    /* la clavija y la base se ajustan en proporcion */
+    .peg         { height: 155px; bottom: 20px; }
+    .base-line   { bottom: 20px; }
+    .disks-stack { bottom: 20px; }
+
+    /* discos un poco mas angostos para que quepan */
+    .disk        { height: 18px; }
+    .disk.size-1 { width: 34px; }
+    .disk.size-2 { width: 56px; }
+    .disk.size-3 { width: 78px; }
+    .disk.size-4 { width: 100px; }
+    .disk.size-5 { width: 122px; }
+
+    /* stats mas compactos */
+    .stats-row   { gap: 20px; }
+    .stat-value  { font-size: 1.1rem; }
+}

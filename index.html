@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!--
+    index.html — Torre de Hanoi
+
+    Este archivo solo tiene estructura. Nada de estilos inline,
+    nada de scripts incrustados. La separacion de responsabilidades
+    que tanto prometimos en la primera semana del bootcamp
+    y que nunca practicamos. Hasta hoy.
+
+    Estructura de pantallas:
+      #splash       → pantalla de inicio
+      #instructions → reglas del juego
+      #game         → el juego en si
+
+    Todo se oculta/muestra via JS (setView en logic.js).
+    Solo una pantalla es visible a la vez. Como dios manda.
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Torre de Hanoi</title>
+
+    <!-- Google Fonts: DM Mono para numeros y etiquetas, DM Sans para texto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+
+    <!-- Todos los estilos en un solo archivo. Sin !important sueltos. Lo prometo. -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════
+         PANTALLA DE INICIO
+         La primera cosa que ve el usuario.
+         Por favor no la arruines con un banner de cookies.
+         ══════════════════════════════════════════ -->
+    <div id="splash">
+
+        <!-- etiqueta superior: contexto del juego -->
+        <p class="title-label">Puzzle clasico</p>
+
+        <!-- titulo principal — dos lineas intencionales -->
+        <h1>Torre de<br>Hanoi</h1>
+
+        <p class="subtitle">Mueve todos los discos a la torre C</p>
+
+        <!-- preview decorativo de discos apilados
+             solo CSS, sin logica, solo para que se vea bonito -->
+        <div class="disk-preview">
+            <div class="preview-disk"></div>
+            <div class="preview-disk"></div>
+            <div class="preview-disk"></div>
+        </div>
+
+        <!-- selector de dificultad: 3, 4 o 5 discos
+             data-n se lee en logic.js para saber cual marcar como activo -->
+        <div class="disk-select-row">
+            <span class="disk-select-label">Discos</span>
+            <button class="disk-btn" data-n="3" onclick="selectDisks(3)">3</button>
+            <button class="disk-btn" data-n="4" onclick="selectDisks(4)">4</button>
+            <button class="disk-btn" data-n="5" onclick="selectDisks(5)">5</button>
+        </div>
+
+        <!-- acciones principales -->
+        <div>
+            <button class="btn-primary" onclick="startGame()">Jugar</button>
+            <button class="btn-ghost"   onclick="showInstructions()">Como se juega</button>
+        </div>
+
+    </div><!-- /#splash -->
+
+
+    <!-- ══════════════════════════════════════════
+         INSTRUCCIONES
+         display:none por defecto (ver style.css).
+         Se muestra con setView('instructions') en logic.js.
+         ══════════════════════════════════════════ -->
+    <div id="instructions">
+
+        <p class="instr-title">Reglas del juego</p>
+
+        <!-- regla 1 -->
+        <div class="rule">
+            <span class="rule-num">01</span>
+            <p class="rule-text">
+                Mueve <strong>todos los discos</strong> de la torre <strong>A</strong>
+                a la torre <strong>C</strong>.
+            </p>
+        </div>
+
+        <!-- regla 2 -->
+        <div class="rule">
+            <span class="rule-num">02</span>
+            <p class="rule-text">
+                Solo puedes mover <strong>un disco a la vez</strong>,
+                el que esta en la cima de una torre.
+            </p>
+        </div>
+
+        <!-- regla 3: la que todos olvidan en el primer intento -->
+        <div class="rule">
+            <span class="rule-num">03</span>
+            <p class="rule-text">
+                Nunca puedes colocar un disco <strong>mas grande</strong>
+                encima de uno <strong>mas pequeno</strong>.
+            </p>
+        </div>
+
+        <div class="instr-divider"></div>
+
+        <!-- nota adicional con la formula del minimo de movimientos -->
+        <p class="rule-text" style="color:var(--muted); font-size:0.88rem; line-height:1.7;">
+            Haz clic en una torre para seleccionarla, luego clic en otra para mover
+            el disco superior. El minimo de movimientos para <em>n</em> discos es
+            <strong>2&sup;n; &minus; 1</strong>.
+        </p>
+
+        <div style="margin-top:36px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="startGame()">Empezar</button>
+            <button class="btn-ghost"   onclick="showSplash()">Volver</button>
+        </div>
+
+    </div><!-- /#instructions -->
+
+
+    <!-- ══════════════════════════════════════════
+         PANTALLA DE JUEGO
+         display:none por defecto.
+         Se activa cuando el usuario presiona "Jugar".
+         ══════════════════════════════════════════ -->
+    <div id="game">
+
+        <!-- barra superior: titulo a la izquierda, stats a la derecha -->
+        <div class="game-top">
+            <span class="game-title">Torre de Hanoi</span>
+
+            <div class="stats-row">
+                <!-- temporizador — actualizado cada segundo por logic.js -->
+                <div class="stat-item">
+                    <span class="stat-label">Tiempo</span>
+                    <span class="stat-value" id="timer-val">0:00</span>
+                </div>
+
+                <!-- contador de movimientos — incrementa en cada jugada valida -->
+                <div class="stat-item">
+                    <span class="stat-label">Movimientos</span>
+                    <span class="stat-value" id="move-val">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────
+             AREA DE TORRES
+             Tres columnas iguales, cada una con:
+               - stack de discos (elementos .disk generados por JS)
+               - clavija visual (elemento .peg en CSS)
+               - linea de base
+               - etiqueta A / B / C
+             ───────────────────────────────────────── -->
+        <div class="towers-area" id="towers-area">
+
+            <!-- Torre A: origen inicial -->
+            <div class="tower-wrap" id="tower-0" onclick="clickTower(0)">
+                <div class="disks-stack" id="stack-0">
+                    <!-- los discos se renderizan aqui desde renderAll() en logic.js -->
+                </div>
+                <div class="peg"></div>
+                <div class="base-line"></div>
+                <span class="peg-label">A</span>
+            </div>
+
+            <!-- Torre B: torre auxiliar (la que todos ignoran hasta que la necesitan) -->
+            <div class="tower-wrap" id="tower-1" onclick="clickTower(1)">
+                <div class="disks-stack" id="stack-1"></div>
+                <div class="peg"></div>
+                <div class="base-line"></div>
+                <span class="peg-label">B</span>
+            </div>
+
+            <!-- Torre C: destino final — aqui debe terminar todo -->
+            <div class="tower-wrap" id="tower-2" onclick="clickTower(2)">
+                <div class="disks-stack" id="stack-2"></div>
+                <div class="peg"></div>
+                <div class="base-line"></div>
+                <span class="peg-label">C</span>
+            </div>
+
+        </div><!-- /.towers-area -->
+
+        <!-- barra de mensajes contextuales al jugador
+             el texto cambia segun la accion realizada (ver setHint en logic.js) -->
+        <div class="hint-bar">
+            <span class="hint-text" id="hint-text">Selecciona una torre de origen</span>
+        </div>
+
+        <!-- pie del juego: minimo teorico a la izquierda, acciones a la derecha -->
+        <div class="game-bottom">
+            <span class="optimal-label" id="optimal-label"></span>
+
+            <div>
+                <button class="btn-ghost" onclick="resetGame()">Reiniciar</button>
+                <button class="btn-ghost" onclick="showSplash()">Menu</button>
+            </div>
+        </div>
+
+    </div><!-- /#game -->
+
+
+    <!-- ══════════════════════════════════════════
+         OVERLAY DE VICTORIA
+         Posicion fixed sobre todo lo demas.
+         Se activa con la clase .show (ver showWin en logic.js).
+         Backdrop-filter borroso porque somos modernos.
+         ══════════════════════════════════════════ -->
+    <div class="overlay" id="win-overlay">
+        <div class="modal-box">
+
+            <!-- simbolo decorativo — minimalista, sin emojis, como pidieron -->
+            <span class="modal-symbol">&#9675;</span>
+
+            <h2 class="modal-title">Resuelto</h2>
+            <p class="modal-sub">Puzzle completado</p>
+
+            <!-- estadisticas de la partida: tiempo y movimientos -->
+            <div class="modal-stats">
+                <div class="modal-stat-item stat-item">
+                    <span class="stat-label">Tiempo</span>
+                    <span class="stat-value" id="win-time">—</span>
+                </div>
+                <div class="modal-stat-item stat-item">
+                    <span class="stat-label">Movimientos</span>
+                    <span class="stat-value" id="win-moves">—</span>
+                </div>
+            </div>
+
+            <!-- eficiencia vs. solucion optima — calculada en showWin() -->
+            <p class="efficiency" id="win-efficiency"></p>
+
+            <!-- acciones post-partida -->
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn-primary" onclick="resetGame(); closeWin();">Jugar de nuevo</button>
+                <button class="btn-ghost"   onclick="showSplash(); closeWin();">Menu</button>
+            </div>
+
+        </div>
+    </div><!-- /#win-overlay -->
+
+
+    <!--
+        El script va al final del body.
+        No porque sea buena practica moderna (lo es),
+        sino porque de otra forma los getElementById
+        no encuentran nada y todo falla silenciosamente.
+        Experiencia propia. No preguntes.
+    -->
+    <script src="logic.js"></script>
+
+</body>
+</html>
