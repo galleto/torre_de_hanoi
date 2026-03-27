@@ -413,6 +413,98 @@ function setHint(msg, isError) {
     }
 }
 
+/* ══════════════════════════════════════════
+   ANIMACIÓN DE SOLUCIÓN MÁS OPTIMA
+   Para el jugador curioso que quiere ver la magia de la recursividad.
+   No es parte del juego, pero es un bonus divertido.
+   Se activa con el botón "Ver Solución" en el modal de victoria.
+   ══════════════════════════════════════════ */
+
+/**
+ * Resuelve recursivamente el problema de las Torres de Hanoi y devuelve un array de movimientos.
+ * Cada movimiento es un objeto con propiedades:
+ *   { from: indice_torre_origen, to: indice_torre_destino }
+ *
+ * @param {number} n        - numero de discos a mover
+ * @param {number} origen   - indice de la torre de origen (0=A, 1=B, 2=C)
+ * @param {number} auxiliar - indice de la torre auxiliar
+ * @param {number} destino  - indice de la torre de destino
+ * @param {array}  moves    - array acumulador de movimientos (opcional, para recursion)
+ * @return {array} array con todos los movimientos ordenados
+ */
+function hanoiRecursivo(n, origen, auxiliar, destino, moves = []) {
+    // Caso base: cuando solo hay un disco
+    if (n === 1) {
+        moves.push({ from: origen, to: destino });
+        return moves;
+    }
+
+    // Paso 1: mover n-1 discos de origen a auxiliar (usando destino como apoyo)
+    hanoiRecursivo(n - 1, origen, destino, auxiliar, moves);
+
+    // Paso 2: mover el disco mas grande de origen a destino
+    moves.push({ from: origen, to: destino });
+
+    // Paso 3: mover n-1 discos de auxiliar a destino (usando origen como apoyo)
+    hanoiRecursivo(n - 1, auxiliar, origen, destino, moves);
+
+    return moves;
+}
+
+/**
+ * Calcula la secuencia de movimientos para resolver el juego de forma optima y la reproduce con animaciones.
+ * Utiliza el algoritmo recursivo clásico de la Torre de Hanoi.
+ * El tiempo entre movimientos es de 800ms para que se pueda seguir visualmente.
+ */
+function animateSolution() {
+    closeWin(); // Cerrar modal si estaba abierto
+    resetGame(); // Reiniciar el juego para mostrar la solución desde el estado inicial
+    // Obtener la secuencia optima de movimientos
+    const moves = hanoiRecursivo(state.numDisks, 0, 1, 2);
+
+    // Delay inicial para poder ver la animación desde el estado inicial
+    const initDelay = 1000;
+    
+    // Reproducir los movimientos con animacion
+    let delay = initDelay;
+    moves.forEach(move => {
+        setTimeout(() => {
+            // Simular el click en torre origen y luego en torre destino
+            executeMove(move.from, move.to);
+        }, delay);
+        delay += 800; // 800ms entre cada movimiento
+    });
+    
+    // Mostrar el modal de victoria después de que terminen todos los movimientos
+    const totalDelay = initDelay + moves.length * 800;
+    setTimeout(showWin, totalDelay);
+}
+
+/**
+ * Ejecuta un movimiento de forma silenciosa (sin validar, solo mover).
+ * Se usa para la animacion de solucion.
+ *
+ * @param {number} from - indice de torre origen
+ * @param {number} to   - indice de torre destino
+ */
+function executeMove(from, to) {
+    // Validar que hay disco en origen y el movimiento es valido
+    if (state.towers[from].length === 0) return;
+
+    const topSrc = state.towers[from][state.towers[from].length - 1];
+    const topDst = state.towers[to].length > 0
+        ? state.towers[to][state.towers[to].length - 1]
+        : Infinity;
+
+    if (topSrc <= topDst) {
+        // Mover disco
+        state.towers[to].push(state.towers[from].pop());
+        renderAll();
+    }
+}
+
+
+
 
 /* ══════════════════════════════════════════
    MODAL DE VICTORIA
