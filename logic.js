@@ -121,6 +121,7 @@ function initGame() {
     // index 0 = base, ultimo index = cima
     for (let i = state.numDisks; i >= 1; i--) {
         state.towers[0].push(i);
+        console.log(`Agregando disco de tamaño ${i} a la torre A`);
     }
 
     state.selectedTower = null;
@@ -332,14 +333,20 @@ function renderAll() {
 
         // los discos en towers[i] van de base a cima,
         // pero en el DOM queremos la base abajo visualmente.
-        // como el array ya esta ordenado base→cima y el CSS
-        // los apila con flex column, el orden del DOM es correcto.
-        state.towers[towerIdx].forEach(size => {
-            const disk = document.createElement('div');
-            disk.className = `disk size-${size}`;
-            stack.appendChild(disk);
-        });
+        // utilizamos recursividad para renderizar al reves sin modificar el estado.
+        console.log(`Renderizando torre ${towerIdx} con discos: ${state.towers[towerIdx].join(', ')}`);
+        renderDisksRecursive(stack, towerIdx, state.towers[towerIdx]);
     });
+}
+
+// El array de discos esta ordenado de base a cima, por lo que renderizamos al reves para que el disco mas grande quede abajo visualmente. El CSS con flex column se encarga de apilarlos correctamente.
+function renderDisksRecursive(stack, towerIdx, disks) {
+    if (disks.length === 0) return; // caso base: torre vacia
+    const size = disks[0]; // disco en la base
+    const disk = document.createElement('div');
+    disk.className = `disk size-${size}`;
+    renderDisksRecursive(stack, towerIdx, disks.slice(1)); // recursivo para el resto
+    stack.appendChild(disk);
 }
 
 /**
@@ -351,8 +358,8 @@ function renderAll() {
  */
 function liftTopDisk(towerIdx, on) {
     const stack = document.getElementById('stack-' + towerIdx);
-    if (!stack.lastChild) return; // torre vacia, no hay nada que levantar
-    stack.lastChild.classList.toggle('lifting', on);
+    if (!stack.firstChild) return; // torre vacia, no hay nada que levantar
+    stack.firstChild.classList.toggle('lifting', on);
 }
 
 
