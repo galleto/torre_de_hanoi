@@ -362,6 +362,17 @@ h1 {
     height: 190px;
 }
 
+.peg::before{
+    content: '';
+    display: block;
+    width: 20px;
+    height: 190px;
+    background: #ff0000;
+    border-radius: 1px;
+    transform: translateX(-50%);
+    opacity: 0;
+}
+
 /* torre seleccionada: clavija mas visible */
 .tower-wrap.selected .peg {
     opacity: 0.9;
@@ -559,6 +570,7 @@ h1 {
 
     /* la clavija y la base se ajustan en proporcion */
     .peg         { height: 155px; bottom: 20px; }
+    .peg::before  { height: 155px; width: 12px; }
     .base-line   { bottom: 20px; }
     .disks-stack { bottom: 20px; }
 
